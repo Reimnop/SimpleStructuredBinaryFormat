@@ -6,7 +6,7 @@ This library provides a C# interface for it, though feel free to port it to any 
 
 ## Features
 
-- Supports a bunch of data types: `object`, `array`, `bool`, `sbyte`, `short`, `int`, `long`, `byte`, `ushort`, `uint`, `ulong`, `Half`, `float`, `double`, `string` and `byte[]`
+- Supports a bunch of data types: `null`, `object`, `array`, `bool`, `sbyte`, `short`, `int`, `long`, `byte`, `ushort`, `uint`, `ulong`, `Half`, `float`, `double`, `string` and `byte[]`
 - Supports compression methods: None, Gzip, and Deflate.
 - Simple API for reading and writing SSBF data.
 

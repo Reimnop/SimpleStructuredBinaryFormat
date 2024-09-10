@@ -32,63 +32,64 @@ public static class SsbfWrite
         dataStream.Flush();
     }
 
-    private static void WriteNode(Stream stream, SsbfNode node)
+    private static void WriteNode(Stream stream, SsbfNode? node)
     {
-        stream.WriteByte((byte)node.Type);
-        switch (node.Type)
+        var nodeType = node?.Type ?? NodeType.Null;
+        stream.WriteByte((byte)nodeType);
+        switch (nodeType)
         {
             case NodeType.Null:
                 break;
             case NodeType.Object:
-                WriteObject(stream, (SsbfObject)node);
+                WriteObject(stream, (SsbfObject)node!);
                 break;
             case NodeType.Array:
-                WriteArray(stream, (SsbfArray)node);
+                WriteArray(stream, (SsbfArray)node!);
                 break;
             case NodeType.Boolean:
-                WriteBoolean(stream, ((SsbfBooleanValue)node).Value);
+                WriteBoolean(stream, ((SsbfBooleanValue)node!).Value);
                 break;
             case NodeType.SByte:
-                stream.Write(((SsbfSByteValue)node).Value);
+                stream.Write(((SsbfSByteValue)node!).Value);
                 break;
             case NodeType.Short:
-                stream.Write(((SsbfShortValue)node).Value);
+                stream.Write(((SsbfShortValue)node!).Value);
                 break;
             case NodeType.Integer:
-                stream.Write(((SsbfIntegerValue)node).Value);
+                stream.Write(((SsbfIntegerValue)node!).Value);
                 break;
             case NodeType.Long:
-                stream.Write(((SsbfLongValue)node).Value);
+                stream.Write(((SsbfLongValue)node!).Value);
                 break;
             case NodeType.Byte:
-                stream.Write(((SsbfByteValue)node).Value);
+                stream.Write(((SsbfByteValue)node!).Value);
                 break;
             case NodeType.UShort:
-                stream.Write(((SsbfUShortValue)node).Value);
+                stream.Write(((SsbfUShortValue)node!).Value);
                 break;
             case NodeType.UInteger:
-                stream.Write(((SsbfUIntegerValue)node).Value);
+                stream.Write(((SsbfUIntegerValue)node!).Value);
                 break;
             case NodeType.ULong:
-                stream.Write(((SsbfULongValue)node).Value);
+                stream.Write(((SsbfULongValue)node!).Value);
                 break;
             case NodeType.HalfFloat:
-                stream.Write(((SsbfHalfFloatValue)node).Value);
+                stream.Write(((SsbfHalfFloatValue)node!).Value);
                 break;
             case NodeType.Single:
-                stream.Write(((SsbfSingleValue)node).Value);
+                stream.Write(((SsbfSingleValue)node!).Value);
                 break;
             case NodeType.Double:
-                stream.Write(((SsbfDoubleValue)node).Value);
+                stream.Write(((SsbfDoubleValue)node!).Value);
                 break;
             case NodeType.String:
-                WriteString(stream, ((SsbfStringValue)node).Value);
+                WriteString(stream, ((SsbfStringValue)node!).Value);
                 break;
             case NodeType.ByteArray:
-                WriteByteArray(stream, ((SsbfByteArray)node).Data);
+                WriteByteArray(stream, ((SsbfByteArray)node!).Data);
                 break;
             default:
-                throw new NotSupportedException($"Node type '{node.Type}' is not supported");
+                throw new NotSupportedException($"Node type '{nodeType}' is not supported");
         }
     }
     

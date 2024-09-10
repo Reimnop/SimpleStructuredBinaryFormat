@@ -16,7 +16,7 @@ public static class SsbfRead
     /// <param name="stream">The stream to read from.</param>
     /// <returns>The read node.</returns>
     /// <exception cref="InvalidDataException">Thrown when the read magic number does not match <see cref="SsbfGlobal.MagicNumber"/></exception>
-    public static SsbfNode ReadFromStream(Stream stream)
+    public static SsbfNode? ReadFromStream(Stream stream)
     {
         // Check magic number
         var magicNumber = stream.Read<int>();
@@ -31,12 +31,12 @@ public static class SsbfRead
         return ReadNode(dataStream);
     }
 
-    private static SsbfNode ReadNode(Stream stream)
+    private static SsbfNode? ReadNode(Stream stream)
     {
         var type = (NodeType)stream.ReadByte();
         return type switch
         {
-            NodeType.Null => new SsbfNull(),
+            NodeType.Null => null,
             NodeType.Object => ReadObject(stream),
             NodeType.Array => ReadArray(stream),
             NodeType.Boolean => new SsbfBooleanValue(stream.Read<bool>()),

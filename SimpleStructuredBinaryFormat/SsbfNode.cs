@@ -14,7 +14,7 @@ public abstract class SsbfNode
     /// Gets or sets the element at index of this node, if this node is a <see cref="SsbfArray"/>
     /// </summary>
     /// <param name="index">The index of the element.</param>
-    public SsbfNode this[int index]
+    public SsbfNode? this[int index]
     {
         get => ((SsbfArray)this)[index];
         set => ((SsbfArray)this)[index] = value;
@@ -24,7 +24,7 @@ public abstract class SsbfNode
     /// Gets or sets the element with the specified key, if this node is a <see cref="SsbfObject"/>
     /// </summary>
     /// <param name="key">The key of the element.</param>
-    public SsbfNode this[string key]
+    public SsbfNode? this[string key]
     {
         get => ((SsbfObject)this)[key];
         set => ((SsbfObject)this)[key] = value;

@@ -21,7 +21,8 @@ var obj = new SsbfObject
             ["salary"] = 60000.0
         },
     },
-    ["data"] = Enumerable.Range(0, 10000).Select(x => (byte)(x % 256)).ToArray()
+    ["data"] = Enumerable.Range(0, 10000).Select(x => (byte)(x % 256)).ToArray(),
+    ["null"] = null,
 };
 
 using (var stream = File.Open("employees.ssbf", FileMode.Create))

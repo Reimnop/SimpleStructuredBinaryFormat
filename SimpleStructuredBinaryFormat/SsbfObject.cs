@@ -6,28 +6,28 @@ namespace SimpleStructuredBinaryFormat;
 /// <summary>
 /// Represents an object, which is a collection of key-value pairs of string key names and <see cref="SsbfNode"/> values.
 /// </summary>
-public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode>
+public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode?>
 {
     public override NodeType Type => NodeType.Object;
     
     public int Count => nodes.Count;
     public bool IsReadOnly => false;
     public ICollection<string> Keys => nodes.Keys;
-    public ICollection<SsbfNode> Values => nodes.Values;
+    public ICollection<SsbfNode?> Values => nodes.Values;
 
-    private readonly Dictionary<string, SsbfNode> nodes;
+    private readonly Dictionary<string, SsbfNode?> nodes;
     
     public SsbfObject()
     {
-        nodes = new Dictionary<string, SsbfNode>();
+        nodes = new Dictionary<string, SsbfNode?>();
     }
     
     public SsbfObject(int capacity)
     {
-        nodes = new Dictionary<string, SsbfNode>(capacity);
+        nodes = new Dictionary<string, SsbfNode?>(capacity);
     }
     
-    public IEnumerator<KeyValuePair<string, SsbfNode>> GetEnumerator()
+    public IEnumerator<KeyValuePair<string, SsbfNode?>> GetEnumerator()
     {
         return nodes.GetEnumerator();
     }
@@ -37,9 +37,9 @@ public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode>
         return GetEnumerator();
     }
 
-    public void Add(KeyValuePair<string, SsbfNode> item)
+    public void Add(KeyValuePair<string, SsbfNode?> item)
     {
-        ((ICollection<KeyValuePair<string, SsbfNode>>)nodes).Add(item);
+        ((ICollection<KeyValuePair<string, SsbfNode?>>)nodes).Add(item);
     }
 
     public void Clear()
@@ -47,22 +47,22 @@ public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode>
         nodes.Clear();
     }
 
-    public bool Contains(KeyValuePair<string, SsbfNode> item)
+    public bool Contains(KeyValuePair<string, SsbfNode?> item)
     {
-        return ((ICollection<KeyValuePair<string, SsbfNode>>)nodes).Contains(item);
+        return ((ICollection<KeyValuePair<string, SsbfNode?>>)nodes).Contains(item);
     }
 
-    public void CopyTo(KeyValuePair<string, SsbfNode>[] array, int arrayIndex)
+    public void CopyTo(KeyValuePair<string, SsbfNode?>[] array, int arrayIndex)
     {
-        ((ICollection<KeyValuePair<string, SsbfNode>>)nodes).CopyTo(array, arrayIndex);
+        ((ICollection<KeyValuePair<string, SsbfNode?>>)nodes).CopyTo(array, arrayIndex);
     }
 
-    public bool Remove(KeyValuePair<string, SsbfNode> item)
+    public bool Remove(KeyValuePair<string, SsbfNode?> item)
     {
-        return ((ICollection<KeyValuePair<string, SsbfNode>>)nodes).Remove(item);
+        return ((ICollection<KeyValuePair<string, SsbfNode?>>)nodes).Remove(item);
     }
     
-    public void Add(string key, SsbfNode value)
+    public void Add(string key, SsbfNode? value)
     {
         nodes.Add(key, value);
     }
@@ -82,7 +82,7 @@ public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode>
         return nodes.TryGetValue(key, out value);
     }
 
-    public SsbfNode this[string key]
+    public new SsbfNode? this[string key]
     {
         get => nodes[key];
         set => nodes[key] = value;
@@ -90,6 +90,6 @@ public class SsbfObject : SsbfNode, IDictionary<string, SsbfNode>
 
     public override string ToString()
     {
-        return $"{{ {string.Join(", ", nodes.Select(kv => $"{kv.Key}: {kv.Value}"))} }}";
+        return $"{{ {string.Join(", ", nodes.Select(kv => $"{kv.Key}: {kv.Value?.ToString() ?? "null"}"))} }}";
     }
 }
