@@ -70,9 +70,14 @@ The following node types are allowed:
 | Offset | Size | Description                   |
 |--------|------|-------------------------------|
 | 0      | 4    | Number of key-value pairs     |
-| 4      | 4    | UTF-8 encoded key name length |
-| 8      | n    | UTF-8 encoded key name        |
-| 8 + n  |      | Value (other nodes)           |
+
+For each key-value pair:
+
+| Offset | Size | Description                   |
+|--------|------|-------------------------------|
+| 0      | 4    | UTF-8 encoded key name length |
+| 4      | n    | UTF-8 encoded key name        |
+| 4 + n  |      | Value (other nodes)           |
 
 ### Array
 
