@@ -4,8 +4,8 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>1.0.0</AssemblyVersion>
-    <Version>1.0.0</Version>
+    <AssemblyVersion>1.1.0</AssemblyVersion>
+    <Version>1.1.0</Version>
     <Title>SimpleStructuredBinaryFormat</Title>
     <Description>Simple Structured Binary Format is a simple, efficient, structured binary data format. It mimics JSON, with additional types and compression support.</Description>
     <Copyright>Copyright (c) 2024 Reimnop</Copyright>
