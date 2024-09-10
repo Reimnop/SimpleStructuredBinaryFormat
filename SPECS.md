@@ -14,11 +14,11 @@ All numbers are stored in little-endian format.
 
 ## Header
 
-| Offset | Size | Description                        |
-|--------|------|------------------------------------|
-| 0      | 4    | Magic Number (default: 0x46425353) |
-| 4      | 1    | Compression Mode                   |
-| 5      |      | Root node                          |
+| Offset | Size | Description                                                    |
+|--------|------|----------------------------------------------------------------|
+| 0      | 4    | Magic Number (default: 0x46425353)                             |
+| 4      | 1    | Compression Mode                                               |
+| 5      |      | Root node (compressed with the corresponding compression mode) |
 
 The following compression modes are allowed:
 
