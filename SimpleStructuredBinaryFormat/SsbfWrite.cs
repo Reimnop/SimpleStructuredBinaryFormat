@@ -15,17 +15,17 @@ public static class SsbfWrite
     /// </summary>
     /// <param name="stream">The stream to write to.</param>
     /// <param name="node">The node to write.</param>
-    /// <param name="compression">The compression mode to use.</param>
-    public static void WriteToStream(Stream stream, SsbfNode node, Compression compression = Compression.None)
+    /// <param name="useCompression">Whether to compress (using Brotli algorithm) or not.</param>
+    public static void WriteToStream(Stream stream, SsbfNode node, bool useCompression = false)
     {
         // Write the magic number
         stream.Write(SsbfGlobal.MagicNumber);
         
         // Write the compression mode
-        stream.WriteByte((byte)compression);
+        stream.WriteByte(useCompression ? (byte)1 : (byte)0);
         
         // Write root node
-        var dataStream = GetCompressionStream(stream, compression);
+        var dataStream = GetCompressionStream(stream, useCompression);
         WriteNode(dataStream, node);
         
         // Make sure to flush the stream
@@ -135,12 +135,6 @@ public static class SsbfWrite
         stream.Write(buffer);
     }
     
-    private static Stream GetCompressionStream(Stream stream, Compression compression)
-        => compression switch
-        {
-            Compression.None => stream,
-            Compression.Gzip => new GZipStream(stream, CompressionMode.Compress, true),
-            Compression.Deflate => new DeflateStream(stream, CompressionMode.Compress, true),
-            _ => throw new NotSupportedException($"Compression mode '{compression}' is not supported.")
-        };
+    private static Stream GetCompressionStream(Stream stream, bool enabled)
+        => enabled ? new BrotliStream(stream, CompressionMode.Compress, true) : stream;
 }

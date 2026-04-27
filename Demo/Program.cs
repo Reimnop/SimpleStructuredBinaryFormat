@@ -27,7 +27,7 @@ var obj = new SsbfObject
 
 using (var stream = File.Open("employees.ssbf", FileMode.Create))
 {
-    SsbfWrite.WriteToStream(stream, obj, Compression.Gzip);
+    SsbfWrite.WriteToStream(stream, obj, true);
 }
 
 using (var stream = File.Open("employees.ssbf", FileMode.Open))

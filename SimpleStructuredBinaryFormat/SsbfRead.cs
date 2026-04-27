@@ -24,10 +24,10 @@ public static class SsbfRead
             throw new InvalidDataException($"Invalid magic number, expected '{SsbfGlobal.MagicNumber:X}', got '{magicNumber:X}'");
         
         // Read compression mode
-        var compression = (Compression)stream.ReadByte();
+        var useCompression = stream.ReadByte() != 0;
         
         // Read root node
-        var dataStream = GetCompressionStream(stream, compression);
+        var dataStream = GetCompressionStream(stream, useCompression);
         return ReadNode(dataStream);
     }
 
@@ -112,14 +112,8 @@ public static class SsbfRead
         return Encoding.UTF8.GetString(buffer);
     }
 
-    private static Stream GetCompressionStream(Stream stream, Compression compression)
-        => compression switch
-        {
-            Compression.None => stream,
-            Compression.Gzip => new GZipStream(stream, CompressionMode.Decompress, true),
-            Compression.Deflate => new DeflateStream(stream, CompressionMode.Decompress, true),
-            _ => throw new NotSupportedException($"Compression mode '{compression}' is not supported.")
-        };
+    private static Stream GetCompressionStream(Stream stream, bool enabled)
+        => enabled ? new BrotliStream(stream, CompressionMode.Decompress, true) : stream;
 
     private static T Read<T>(this Stream stream) where T : unmanaged
     {
