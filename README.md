@@ -7,7 +7,7 @@ This library provides a C# interface for it, though feel free to port it to any 
 ## Features
 
 - Supports a bunch of data types: `null`, `object`, `array`, `bool`, `sbyte`, `short`, `int`, `long`, `byte`, `ushort`, `uint`, `ulong`, `Half`, `float`, `double`, `string` and `byte[]`
-- Supports compression methods: None, Gzip, and Deflate.
+- Supports compression via the Brotli algorithm.
 - Simple API for reading and writing SSBF data.
 
 ## Installation
@@ -51,7 +51,7 @@ var obj = new SsbfObject
 
 using (var stream = File.Open("employees.ssbf", FileMode.Create))
 {
-    SsbfWrite.WriteToStream(stream, obj, Compression.Gzip);
+    SsbfWrite.WriteToStream(stream, obj, true); // or false for no compression
 }
 ```
 
@@ -82,10 +82,6 @@ using (var stream = File.Open("employees.ssbf", FileMode.Open))
 
 - `SsbfWrite.WriteToStream(Stream stream, SsbfObject obj, Compression compression)`: Writes the specified SSBF node to the stream.
 - `SsbfRead.ReadFromStream(Stream stream)`: Reads an SSBF node from the stream.
-
-### Enums
-
-- `Compression`: Specifies the compression method. Values: `None`, `Gzip` (recommended), `Deflate`.
 
 ## License
 
