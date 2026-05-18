@@ -14,26 +14,18 @@ All numbers are stored in little-endian format.
 
 ## Header
 
-| Offset | Size | Description                                                    |
-|--------|------|----------------------------------------------------------------|
-| 0      | 4    | Magic Number (default: 0x46425353)                             |
-| 4      | 1    | Compression Mode                                               |
-| 5      |      | Root node (compressed with the corresponding compression mode) |
-
-The following compression modes are allowed:
-
-| Value | Mode    |
-|-------|---------|
-| 0x00  | None    |
-| 0x01  | Gzip    |
-| 0x02  | Deflate |
+| Offset | Size | Description                                                           |
+|--------|------|-----------------------------------------------------------------------|
+| 0      | 4    | Magic Number (default: 0x46425353)                                    |
+| 4      | 1    | Is Compressed (1: true, 0: false)                                     |
+| 5      | -    | Root node (if compression is enabled, data is compressed with Brotli) |
 
 ## Nodes
 
 | Offset | Size | Description |
 |--------|------|-------------|
 | 0      | 1    | Node type   |
-| 1      |      | Node data   |
+| 1      | -    | Node data   |
 
 The following node types are allowed:
 

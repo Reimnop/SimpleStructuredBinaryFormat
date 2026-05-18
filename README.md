@@ -80,7 +80,7 @@ using (var stream = File.Open("employees.ssbf", FileMode.Open))
 
 ### Methods
 
-- `SsbfWrite.WriteToStream(Stream stream, SsbfObject obj, Compression compression)`: Writes the specified SSBF node to the stream.
+- `SsbfWrite.WriteToStream(Stream stream, SsbfObject obj, bool useCompression)`: Writes the specified SSBF node to the stream.
 - `SsbfRead.ReadFromStream(Stream stream)`: Reads an SSBF node from the stream.
 
 ## License
