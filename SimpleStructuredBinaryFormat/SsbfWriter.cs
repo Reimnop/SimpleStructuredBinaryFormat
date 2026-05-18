@@ -348,7 +348,7 @@ public class SsbfWriter : IDisposable
                     ? "Cannot end the current object scope by ending an array scope"
                     : "Cannot end the current array scope by ending an object scope");
         
-        if (!scope.ExpectingPropertyName)
+        if (scope.IsObject && !scope.ExpectingPropertyName)
             throw new InvalidOperationException($"Object is incomplete, expected value for property name");
         
         // write scope terminator

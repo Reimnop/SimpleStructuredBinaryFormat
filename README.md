@@ -51,7 +51,7 @@ var obj = new SsbfObject
 
 using (var stream = File.Open("employees.ssbf", FileMode.Create))
 {
-    SsbfWrite.WriteToStream(stream, obj, true); // or false for no compression
+    SsbfDocument.Save(stream, obj, true); // or false for no compression
 }
 ```
 
@@ -63,7 +63,7 @@ using System.IO;
 
 using (var stream = File.Open("employees.ssbf", FileMode.Open))
 {
-    var obj = SsbfRead.ReadFromStream(stream);
+    var obj = SsbfDocument.Load(stream);
     Console.WriteLine(obj);
 }
 ```
@@ -75,13 +75,9 @@ using (var stream = File.Open("employees.ssbf", FileMode.Open))
 - `SsbfObject`: Represents a structured object with key-value pairs.
 - `SsbfArray`: Represents an array of SSBF nodes.
 - `SsbfByteArray`: Represents a byte array.
-- `SsbfWrite`: Provides methods to write SSBF data to a stream.
-- `SsbfRead`: Provides methods to read SSBF data from a stream.
-
-### Methods
-
-- `SsbfWrite.WriteToStream(Stream stream, SsbfObject obj, bool useCompression)`: Writes the specified SSBF node to the stream.
-- `SsbfRead.ReadFromStream(Stream stream)`: Reads an SSBF node from the stream.
+- `SsbfDocument`: Provides methods to read and write SSBF trees.
+- `SsbfWriter`: Provides methods to write SSBF data to a stream.
+- `SsbfReader`: Provides methods to read SSBF data from a stream.
 
 ## License
 
