@@ -12,154 +12,165 @@ All sizes and offsets are in basic machine units (bytes).
 
 All numbers are stored in little-endian format.
 
+## Packing
+
+All fields are tightly packed.
+
 ## Header
 
-| Offset | Size | Description                                                           |
-|--------|------|-----------------------------------------------------------------------|
-| 0      | 4    | Magic Number (default: 0x46425353)                                    |
-| 4      | 1    | Is Compressed (1: true, 0: false)                                     |
-| 5      | -    | Root node (if compression is enabled, data is compressed with Brotli) |
+| Type   | Description                                                           |
+|--------|-----------------------------------------------------------------------|
+| uint32 | Magic number (default: 0x46425353)                                    |
+| bool   | Use compression                                                       |
+| Node   | Root node (if compression is enabled, data is compressed with Brotli) |
 
-## Nodes
+## Types
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 1    | Node type   |
-| 1      | -    | Node data   |
+## String
+
+| Type    | Description               |
+|---------|---------------------------|
+| uint8[] | UTF-8 encoded string data |
+| uint8   | Null terminator (0x00)    |
+
+## Node
+
+| Type    | Description |
+|---------|-------------|
+| uint8   | Node type   |
+| uint8[] | Node data   |
 
 The following node types are allowed:
 
-| Value | Type      |
-|-------|-----------|
-| 0x00  | Null      |
-| 0x01  | Object    |
-| 0x02  | Array     |
-| 0x03  | Boolean   |
-| 0x04  | SByte     |
-| 0x05  | Short     |
-| 0x06  | Integer   |
-| 0x07  | Long      |
-| 0x08  | Byte      |
-| 0x09  | UShort    |
-| 0x0A  | UInteger  |
-| 0x0B  | ULong     |
-| 0x0C  | HalfFloat |
-| 0x0D  | Single    |
-| 0x0E  | Double    |
-| 0x0F  | String    |
-| 0x10  | ByteArray |
+| Value | Node type  |
+|-------|------------|
+| 0x00  | *Reserved* |
+| 0x01  | Null       |
+| 0x02  | Object     |
+| 0x03  | Array      |
+| 0x04  | Boolean    |
+| 0x05  | SByte      |
+| 0x06  | Short      |
+| 0x07  | Integer    |
+| 0x08  | Long       |
+| 0x09  | Byte       |
+| 0x0A  | UShort     |
+| 0x0B  | UInteger   |
+| 0x0C  | ULong      |
+| 0x0D  | HalfFloat  |
+| 0x0E  | Single     |
+| 0x0F  | Double     |
+| 0x10  | String     |
+| 0x11  | ByteArray  |
 
-## Data Representation
+## Node data for each node type
 
 ### Null
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 0    | No data     |
+No data.
 
 ### Object
 
-| Offset | Size | Description                   |
-|--------|------|-------------------------------|
-| 0      | 4    | Number of key-value pairs     |
+| Type          | Description             |
+|---------------|-------------------------|
+| KeyNodePair[] | Array of key-node pairs |
+| uint8         | Null terminator (0x00)  |
 
-For each key-value pair:
+#### KeyNodePair
 
-| Offset | Size | Description                   |
-|--------|------|-------------------------------|
-| 0      | 4    | UTF-8 encoded key name length |
-| 4      | n    | UTF-8 encoded key name        |
-| 4 + n  |      | Value (other nodes)           |
+| Type   | Description |
+|--------|-------------|
+| String | Key         |
+| Node   | Node        |
 
 ### Array
 
-| Offset | Size | Description               |
-|--------|------|---------------------------|
-| 0      | 4    | Number of elements        |
-| 4      |      | Elements (other nodes)    |
+| Type   | Description            |
+|--------|------------------------|
+| Node[] | Array of nodes         |
+| uint8  | Null terminator (0x00) |
 
 ### Boolean
 
-| Offset | Size | Description               |
-|--------|------|---------------------------|
-| 0      | 1    | Value (1: true, 0: false) |
+| Type | Description |
+|------|-------------|
+| bool | Value       |
 
 ### SByte
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 1    | Value       |
+| Type | Description |
+|------|-------------|
+| int8 | Value       |
 
 ### Short
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 2    | Value       |
+| Type  | Description |
+|-------|-------------|
+| int16 | Value       |
 
 ### Integer
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 4    | Value       |
+| Type  | Description |
+|-------|-------------|
+| int32 | Value       |
 
 ### Long
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 8    | Value       |
+| Type  | Description |
+|-------|-------------|
+| int64 | Value       |
 
 ### Byte
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 1    | Value       |
+| Type  | Description |
+|-------|-------------|
+| uint8 | Value       |
 
 ### UShort
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 2    | Value       |
+| Type   | Description |
+|--------|-------------|
+| uint16 | Value       |
 
 ### UInteger
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 4    | Value       |
+| Type   | Description |
+|--------|-------------|
+| uint32 | Value       |
 
 ### ULong
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 8    | Value       |
+| Type   | Description |
+|--------|-------------|
+| uint64 | Value       |
 
 ### HalfFloat
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 2    | Value       |
+| Type    | Description |
+|---------|-------------|
+| float16 | Value       |
 
 ### Single
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 4    | Value       |
+| Type    | Description |
+|---------|-------------|
+| float32 | Value       |
 
 ### Double
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 8    | Value       |
+| Type    | Description |
+|---------|-------------|
+| float64 | Value       |
 
 ### String
 
-| Offset | Size | Description                   |
-|--------|------|-------------------------------|
-| 0      | 4    | UTF-8 encoded string length   |
-| 4      |      | UTF-8 encoded string          |
+| Type   | Description |
+|--------|-------------|
+| String | Value       |
 
 ### ByteArray
 
-| Offset | Size | Description |
-|--------|------|-------------|
-| 0      | 4    | Length      |
-| 4      |      | Data        |
+| Type    | Description |
+|---------|-------------|
+| uint32  | Length      |
+| uint8[] | Data        |
