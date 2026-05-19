@@ -269,7 +269,12 @@ public class BindingTests
     [Fact]
     public void SnakeCaseRoundTrips()
     {
-        var r = RoundTrip(new SnakeCaseModel { FirstName = "Bob", MaxRetryCount = 5, HTMLParser = "lxml" },
+        var r = RoundTrip(new SnakeCaseModel
+            {
+                FirstName = "Bob", 
+                MaxRetryCount = 5, 
+                HTMLParser = "lxml"
+            },
             SnakeCaseModel.Binder);
         Assert.Equal("Bob", r.FirstName);
         Assert.Equal(5, r.MaxRetryCount);
@@ -280,7 +285,11 @@ public class BindingTests
     public void ScreamingSnakeCaseConventionTransformsKeys()
     {
         var ms = new MemoryStream();
-        SsbfSerializer.Serialize(ms, new ScreamingSnakeCaseModel { FirstName = "x", MaxRetryCount = 1 },
+        SsbfSerializer.Serialize(ms, new ScreamingSnakeCaseModel
+            {
+                FirstName = "x", 
+                MaxRetryCount = 1
+            },
             ScreamingSnakeCaseModel.Binder, leaveOpen: true);
         var keys = WireKeys(ms).ToList();
         Assert.Contains("FIRST_NAME", keys);
@@ -290,7 +299,11 @@ public class BindingTests
     [Fact]
     public void ScreamingSnakeCaseRoundTrips()
     {
-        var r = RoundTrip(new ScreamingSnakeCaseModel { FirstName = "Carol", MaxRetryCount = 7 },
+        var r = RoundTrip(new ScreamingSnakeCaseModel
+            {
+                FirstName = "Carol", 
+                MaxRetryCount = 7
+            },
             ScreamingSnakeCaseModel.Binder);
         Assert.Equal("Carol", r.FirstName);
         Assert.Equal(7, r.MaxRetryCount);
@@ -300,7 +313,11 @@ public class BindingTests
     public void KebabCaseConventionTransformsKeys()
     {
         var ms = new MemoryStream();
-        SsbfSerializer.Serialize(ms, new KebabCaseModel { FirstName = "x", MaxRetryCount = 1 },
+        SsbfSerializer.Serialize(ms, new KebabCaseModel
+            {
+                FirstName = "x", 
+                MaxRetryCount = 1
+            },
             KebabCaseModel.Binder, leaveOpen: true);
         var keys = WireKeys(ms).ToList();
         Assert.Contains("first-name", keys);
@@ -310,7 +327,11 @@ public class BindingTests
     [Fact]
     public void KebabCaseRoundTrips()
     {
-        var r = RoundTrip(new KebabCaseModel { FirstName = "Dave", MaxRetryCount = 2 },
+        var r = RoundTrip(new KebabCaseModel
+            {
+                FirstName = "Dave", 
+                MaxRetryCount = 2
+            },
             KebabCaseModel.Binder);
         Assert.Equal("Dave", r.FirstName);
         Assert.Equal(2, r.MaxRetryCount);
@@ -320,7 +341,11 @@ public class BindingTests
     public void PascalCaseConventionTransformsCamelCaseMemberNames()
     {
         var ms = new MemoryStream();
-        SsbfSerializer.Serialize(ms, new PascalCaseModel { firstName = "x", maxRetryCount = 1 },
+        SsbfSerializer.Serialize(ms, new PascalCaseModel
+            {
+                firstName = "x", 
+                maxRetryCount = 1
+            },
             PascalCaseModel.Binder, leaveOpen: true);
         var keys = WireKeys(ms).ToList();
         Assert.Contains("FirstName", keys);
@@ -330,9 +355,43 @@ public class BindingTests
     [Fact]
     public void PascalCaseRoundTrips()
     {
-        var r = RoundTrip(new PascalCaseModel { firstName = "Eve", maxRetryCount = 9 },
+        var r = RoundTrip(new PascalCaseModel
+            {
+                firstName = "Eve", 
+                maxRetryCount = 9 
+            },
             PascalCaseModel.Binder);
         Assert.Equal("Eve", r.firstName);
         Assert.Equal(9, r.maxRetryCount);
+    }
+
+    [Fact]
+    public void ListNestedRoundTrips()
+    {
+        var original = new PersonWithJobsModel
+        {
+            Name = "Alice",
+            Jobs = new List<OccupationModel>
+            {
+                new()
+                {
+                    Title = "Engineer",
+                    Address = "123 Main St"
+                },
+                new()
+                {
+                    Title = "Consultant", 
+                    Address = "456 Oak Ave"
+                },
+            }
+        };
+        var result = RoundTrip(original, PersonWithJobsModel.Binder);
+        Assert.Equal("Alice", result.Name);
+        Assert.NotNull(result.Jobs);
+        Assert.Equal(2, result.Jobs!.Count);
+        Assert.Equal("Engineer", result.Jobs[0].Title);
+        Assert.Equal("123 Main St", result.Jobs[0].Address);
+        Assert.Equal("Consultant", result.Jobs[1].Title);
+        Assert.Equal("456 Oak Ave", result.Jobs[1].Address);
     }
 }

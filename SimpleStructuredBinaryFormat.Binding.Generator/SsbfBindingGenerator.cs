@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -7,7 +5,7 @@ using Microsoft.CodeAnalysis.Text;
 
 namespace SimpleStructuredBinaryFormat.Binding.Generator;
 
-[Microsoft.CodeAnalysis.Generator(LanguageNames.CSharp)]
+[Generator(LanguageNames.CSharp)]
 public sealed class SsbfBindingGenerator : IIncrementalGenerator
 {
     private const string SerializableAttr    = "SimpleStructuredBinaryFormat.Binding.SsbfSerializableAttribute";
@@ -318,11 +316,21 @@ public sealed class SsbfBindingGenerator : IIncrementalGenerator
                 sb.AppendLine($"{p}    {target} = new {Strip(fullType)}();");
                 sb.AppendLine($"{p}    while (reader.Read() && reader.TokenType != SsbfTokenType.EndArray)");
                 sb.AppendLine($"{p}    {{");
-                var call = ReaderCall(elemKind);
-                if (call is not null)
-                    sb.AppendLine($"{p}        if (reader.TokenType != SsbfTokenType.Null) {target}.Add({call});");
+                if (elemKind == TKind.Nested)
+                {
+                    // Element is a [SsbfSerializable] type; reader is on its StartObject token.
+                    var elemBinder = Escape(elemFull ?? "object") + ".SsbfBinder";
+                    sb.AppendLine($"{p}        if (reader.TokenType != SsbfTokenType.Null)");
+                    sb.AppendLine($"{p}            {target}.Add(new {elemBinder}().DeserializeFromStartObject(reader));");
+                }
                 else
-                    sb.AppendLine($"{p}        // unsupported list element type '{elemFull}' — skipped");
+                {
+                    var call = ReaderCall(elemKind);
+                    if (call is not null)
+                        sb.AppendLine($"{p}        if (reader.TokenType != SsbfTokenType.Null) {target}.Add({call});");
+                    else
+                        sb.AppendLine($"{p}        // unsupported list element type '{elemFull}' — skipped");
+                }
                 sb.AppendLine($"{p}    }}");
                 sb.AppendLine($"{p}}}");
                 break;
@@ -507,8 +515,14 @@ public sealed class SsbfBindingGenerator : IIncrementalGenerator
                 named.TypeArguments.Length == 1)
             {
                 var elem = named.TypeArguments[0];
-                var (ek, _, _) = Classify(elem);
-                return (TKind.List, ek, elem.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                var (ek, _, ef) = Classify(elem);
+                // For Nested elements, ef already holds the simple type name (from the Nested branch below).
+                // For everything else, use the fully-qualified display string so the generator can emit
+                // correct type references (e.g. List<string> instantiation).
+                var elemFull = ek == TKind.Nested
+                    ? ef
+                    : elem.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+                return (TKind.List, ek, elemFull);
             }
 
             if (named.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == SerializableAttr))

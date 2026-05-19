@@ -29,16 +29,16 @@ public partial class AddressModel
 [SsbfSerializable]
 public partial class NumericModel
 {
-    public sbyte  I8  { get; set; }
-    public short  I16 { get; set; }
-    public int    I32 { get; set; }
-    public long   I64 { get; set; }
-    public byte   U8  { get; set; }
+    public sbyte I8 { get; set; }
+    public short I16 { get; set; }
+    public int I32 { get; set; }
+    public long I64 { get; set; }
+    public byte U8 { get; set; }
     public ushort U16 { get; set; }
-    public uint   U32 { get; set; }
-    public ulong  U64 { get; set; }
-    public Half   F16 { get; set; }
-    public float  F32 { get; set; }
+    public uint U32 { get; set; }
+    public ulong U64 { get; set; }
+    public Half F16 { get; set; }
+    public float F32 { get; set; }
     public double F64 { get; set; }
 }
 
@@ -84,6 +84,20 @@ public partial class PascalCaseModel
 {
     public string firstName { get; set; } = "";
     public int maxRetryCount { get; set; }
+}
+
+[SsbfSerializable]
+public partial class OccupationModel
+{
+    public string Title { get; set; } = "";
+    public string Address { get; set; } = "";
+}
+
+[SsbfSerializable]
+public partial class PersonWithJobsModel
+{
+    public string Name { get; set; } = "";
+    public List<OccupationModel>? Jobs { get; set; }
 }
 
 [SsbfSerializable]
