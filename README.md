@@ -51,7 +51,7 @@ var obj = new SsbfObject
 
 using (var stream = File.Open("employees.ssbf", FileMode.Create))
 {
-    SsbfWrite.WriteToStream(stream, obj, true); // or false for no compression
+    SsbfDocument.Save(stream, obj, true); // or false for no compression
 }
 ```
 
@@ -63,7 +63,7 @@ using System.IO;
 
 using (var stream = File.Open("employees.ssbf", FileMode.Open))
 {
-    var obj = SsbfRead.ReadFromStream(stream);
+    var obj = SsbfDocument.Load(stream);
     Console.WriteLine(obj);
 }
 ```
