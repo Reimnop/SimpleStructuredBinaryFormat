@@ -134,6 +134,47 @@ public class ErrorHandlingTests
     }
 
     // -----------------------------------------------------------------------
+    // Empty-key support
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void WritePropertyName_AcceptsEmptyKey()
+    {
+        // Empty keys are valid under the End-node spec; the sentinel key written
+        // by WriteEndObject is also empty, so the reader must not confuse the two.
+        using var reader = TestHelpers.WriteAndRead(w =>
+        {
+            w.WriteStartObject();
+            w.WritePropertyName("");
+            w.WriteInteger(99);
+            w.WriteEndObject();
+        });
+
+        reader.Read(); // StartObject
+        reader.Read(); // PropertyName
+        Assert.Equal("", reader.GetPropertyName());
+        reader.Read(); // Integer
+        Assert.Equal(99, reader.GetInteger());
+        TestHelpers.AssertRead(reader, SsbfTokenType.EndObject);
+    }
+
+    [Fact]
+    public void WritePropertyName_AcceptsNonEmptyKey()
+    {
+        using var reader = TestHelpers.WriteAndRead(w =>
+        {
+            w.WriteStartObject();
+            w.WritePropertyName("x");
+            w.WriteNull();
+            w.WriteEndObject();
+        });
+
+        reader.Read(); // StartObject
+        reader.Read(); // PropertyName
+        Assert.Equal("x", reader.GetPropertyName());
+    }
+
+    // -----------------------------------------------------------------------
     // Unicode strings
     // -----------------------------------------------------------------------
 

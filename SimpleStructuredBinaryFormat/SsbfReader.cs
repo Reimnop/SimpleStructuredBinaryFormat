@@ -23,9 +23,8 @@ public class SsbfReader : IDisposable
         public required bool IsObject { get; init; }
 
         /// <summary>
-        /// <c>true</c> when the reader is positioned between two key-value pairs and
-        /// the next byte should be interpreted as either a null terminator (end of scope)
-        /// or the first byte of a property-name string.
+        /// <c>true</c> when inside an object and the next thing to read is a key string
+        /// (followed immediately by a node-type byte).
         /// </summary>
         public bool ExpectingPropertyName { get; set; }
     }
@@ -36,17 +35,16 @@ public class SsbfReader : IDisposable
     /// <summary>The type of the token the reader is currently positioned on.</summary>
     public SsbfTokenType TokenType { get; private set; } = SsbfTokenType.None;
 
-    // The stream that supplies node bytes. May be a BrotliStream wrapping rootStream.
-    private readonly Stream dataStream;
-
     // The original stream supplied to the constructor.
     private readonly Stream rootStream;
 
-    private readonly Stack<ScopeInfo> scopes = new();
+    // The stream that supplies node bytes — either rootStream or a BrotliStream over it.
+    private Stream ActiveDataStream => compressionStream ?? rootStream;
+    private BrotliStream? compressionStream;
 
+    private readonly Stack<ScopeInfo> scopes = new();
     private readonly bool leaveOpen;
 
-    // Cached value for the current token (lazy, set on demand).
     private string? currentPropertyName;
     private object? currentValue; // boxed scalar or null
 
@@ -64,15 +62,7 @@ public class SsbfReader : IDisposable
     {
         this.leaveOpen = leaveOpen;
         rootStream = stream;
-
-        // We can't set up dataStream until we've read the header, so temporarily point at rootStream.
-        // ReadHeader() will replace it with a BrotliStream when compression is used.
-        dataStream = rootStream; // placeholder; replaced in ReadHeader for compressed streams
     }
-
-    // We use a separate field so the constructor can be simple.
-    private Stream ActiveDataStream => compressionStream ?? rootStream;
-    private BrotliStream? compressionStream;
 
     /// <summary>
     /// Advances the reader to the next token.
@@ -88,163 +78,60 @@ public class SsbfReader : IDisposable
         currentPropertyName = null;
         currentValue = null;
 
-        // --- inside an object: handle property-name / end-of-object ---
+        var stream = ActiveDataStream;
+
+        // --- inside an object: read key string, then node-type byte ---
         if (scopes.TryPeek(out var topScope) && topScope.IsObject && topScope.ExpectingPropertyName)
         {
-            // Peek at the next byte to distinguish null-terminator from key start.
-            var peek = PeekByte(ActiveDataStream);
+            // Read the key string unconditionally — empty keys are valid.
+            var key = ReadStringPayload(stream);
 
-            if (peek == 0x00)
+            // Now read the node-type byte. If it is End (0x00) the key is a sentinel
+            // and we discard it; the object is complete.
+            var nodeTypeByte = ReadByte(stream);
+            if (nodeTypeByte == (byte)NodeType.End)
             {
-                // Consume the terminator.
-                ConsumeByte(ActiveDataStream);
                 scopes.Pop();
                 TokenType = SsbfTokenType.EndObject;
                 NotifyParentScopeValueConsumed();
                 return true;
             }
 
-            // It's the first byte of a null-terminated key string.
-            ConsumeByte(ActiveDataStream); // consume the peeked byte
-            currentPropertyName = ReadStringPayloadWithFirstByte(ActiveDataStream, (byte)peek);
+            // Real key-node pair: emit the PropertyName token now, defer the value to the next Read().
+            // We re-enter dispatch by falling through — but we already have the node-type byte, so
+            // we handle it inline rather than reading another byte.
+            currentPropertyName = key;
             topScope.ExpectingPropertyName = false;
             TokenType = SsbfTokenType.PropertyName;
+
+            // Stash the node-type byte so the next Read() call picks it up without re-reading.
+            _pendingNodeType = nodeTypeByte;
             return true;
         }
 
-        // --- inside an array: check for end-of-array terminator ---
-        if (topScope is { IsObject: false })
+        // --- read the next node-type byte (array element, root value, or stashed value) ---
+        byte nodeType;
+        if (_pendingNodeType is byte pending)
         {
-            var peek = PeekByte(ActiveDataStream);
-
-            if (peek == 0x00)
-            {
-                ConsumeByte(ActiveDataStream);
-                scopes.Pop();
-                TokenType = SsbfTokenType.EndArray;
-                NotifyParentScopeValueConsumed();
-                return true;
-            }
+            _pendingNodeType = null;
+            nodeType = pending;
+        }
+        else
+        {
+            var raw = stream.ReadByte();
+            if (raw == -1)
+                return false;
+            nodeType = (byte)raw;
         }
 
-        // --- root: nothing more to read after the root value was fully consumed ---
-        if (scopes.Count == 0 && TokenType != SsbfTokenType.None
-            && TokenType is not SsbfTokenType.StartObject and not SsbfTokenType.StartArray)
-            return false;
-
-        // --- read the next node type byte ---
-        var nodeTypeByte = PeekByte(ActiveDataStream);
-        if (nodeTypeByte == -1)
-            return false;
-        ConsumeByte(ActiveDataStream);
-
-        var nodeType = (NodeType)(byte)nodeTypeByte;
-
-        switch (nodeType)
-        {
-            case NodeType.Null:
-                TokenType = SsbfTokenType.Null;
-                currentValue = null;
-                break;
-
-            case NodeType.Object:
-                TokenType = SsbfTokenType.StartObject;
-                scopes.Push(new ScopeInfo { IsObject = true, ExpectingPropertyName = true });
-                return true; // don't call NotifyParentScopeValueConsumed yet — End* does that
-
-            case NodeType.Array:
-                TokenType = SsbfTokenType.StartArray;
-                scopes.Push(new ScopeInfo { IsObject = false, ExpectingPropertyName = false });
-                return true;
-
-            case NodeType.Boolean:
-                TokenType = SsbfTokenType.Boolean;
-                currentValue = ConsumeByte(ActiveDataStream) != 0;
-                break;
-
-            case NodeType.SByte:
-                TokenType = SsbfTokenType.SByte;
-                currentValue = (sbyte)ConsumeByte(ActiveDataStream);
-                break;
-
-            case NodeType.Short:
-                TokenType = SsbfTokenType.Short;
-                currentValue = ReadPrimitive<short>(ActiveDataStream);
-                break;
-
-            case NodeType.Integer:
-                TokenType = SsbfTokenType.Integer;
-                currentValue = ReadPrimitive<int>(ActiveDataStream);
-                break;
-
-            case NodeType.Long:
-                TokenType = SsbfTokenType.Long;
-                currentValue = ReadPrimitive<long>(ActiveDataStream);
-                break;
-
-            case NodeType.Byte:
-                TokenType = SsbfTokenType.Byte;
-                currentValue = ConsumeByte(ActiveDataStream);
-                break;
-
-            case NodeType.UShort:
-                TokenType = SsbfTokenType.UShort;
-                currentValue = ReadPrimitive<ushort>(ActiveDataStream);
-                break;
-
-            case NodeType.UInteger:
-                TokenType = SsbfTokenType.UInteger;
-                currentValue = ReadPrimitive<uint>(ActiveDataStream);
-                break;
-
-            case NodeType.ULong:
-                TokenType = SsbfTokenType.ULong;
-                currentValue = ReadPrimitive<ulong>(ActiveDataStream);
-                break;
-
-            case NodeType.HalfFloat:
-                TokenType = SsbfTokenType.HalfFloat;
-                currentValue = ReadPrimitive<Half>(ActiveDataStream);
-                break;
-
-            case NodeType.Single:
-                TokenType = SsbfTokenType.Single;
-                currentValue = ReadPrimitive<float>(ActiveDataStream);
-                break;
-
-            case NodeType.Double:
-                TokenType = SsbfTokenType.Double;
-                currentValue = ReadPrimitive<double>(ActiveDataStream);
-                break;
-
-            case NodeType.String:
-                TokenType = SsbfTokenType.String;
-                currentValue = ReadStringPayload(ActiveDataStream);
-                break;
-
-            case NodeType.ByteArray:
-                TokenType = SsbfTokenType.ByteArray;
-                var length = ReadPrimitive<int>(ActiveDataStream);
-                var data = new byte[length];
-                ActiveDataStream.ReadExactly(data);
-                currentValue = data;
-                break;
-
-            default:
-                throw new InvalidDataException($"Unknown node type byte: 0x{nodeTypeByte:X2}");
-        }
-
-        NotifyParentScopeValueConsumed();
-        return true;
+        return DispatchNodeType(nodeType, stream);
     }
 
     // -------------------------------------------------------------------------
     // Value accessors
     // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Returns the property name of the current <see cref="SsbfTokenType.PropertyName"/> token.
-    /// </summary>
+    /// <summary>Returns the property name of the current <see cref="SsbfTokenType.PropertyName"/> token.</summary>
     public string GetPropertyName()
     {
         ThrowIfNotToken(SsbfTokenType.PropertyName);
@@ -311,6 +198,133 @@ public class SsbfReader : IDisposable
     }
 
     // -------------------------------------------------------------------------
+    // Private — dispatch
+    // -------------------------------------------------------------------------
+
+    // When the object-scope branch reads the key and node-type byte together, it stashes
+    // the node-type byte here so the *next* Read() call can dispatch without an extra stream read.
+    private byte? _pendingNodeType;
+
+    private bool DispatchNodeType(byte nodeType, Stream stream)
+    {
+        switch ((NodeType)nodeType)
+        {
+            case NodeType.End:
+                // End node inside an array — arrays don't read a key first, so End appears
+                // directly in the node-type position.
+                if (scopes.TryPeek(out var arrScope) && !arrScope.IsObject)
+                {
+                    scopes.Pop();
+                    TokenType = SsbfTokenType.EndArray;
+                    NotifyParentScopeValueConsumed();
+                    return true;
+                }
+                // End at root or in unexpected position — treat as end of stream.
+                return false;
+
+            case NodeType.Null:
+                TokenType = SsbfTokenType.Null;
+                break;
+
+            case NodeType.Object:
+                TokenType = SsbfTokenType.StartObject;
+                scopes.Push(new ScopeInfo { IsObject = true, ExpectingPropertyName = true });
+                return true; // End* token will call NotifyParentScopeValueConsumed
+
+            case NodeType.Array:
+                TokenType = SsbfTokenType.StartArray;
+                scopes.Push(new ScopeInfo { IsObject = false, ExpectingPropertyName = false });
+                return true;
+
+            case NodeType.Boolean:
+                TokenType = SsbfTokenType.Boolean;
+                currentValue = ReadByte(stream) != 0;
+                break;
+
+            case NodeType.SByte:
+                TokenType = SsbfTokenType.SByte;
+                currentValue = (sbyte)ReadByte(stream);
+                break;
+
+            case NodeType.Short:
+                TokenType = SsbfTokenType.Short;
+                currentValue = ReadPrimitive<short>(stream);
+                break;
+
+            case NodeType.Integer:
+                TokenType = SsbfTokenType.Integer;
+                currentValue = ReadPrimitive<int>(stream);
+                break;
+
+            case NodeType.Long:
+                TokenType = SsbfTokenType.Long;
+                currentValue = ReadPrimitive<long>(stream);
+                break;
+
+            case NodeType.Byte:
+                TokenType = SsbfTokenType.Byte;
+                currentValue = ReadByte(stream);
+                break;
+
+            case NodeType.UShort:
+                TokenType = SsbfTokenType.UShort;
+                currentValue = ReadPrimitive<ushort>(stream);
+                break;
+
+            case NodeType.UInteger:
+                TokenType = SsbfTokenType.UInteger;
+                currentValue = ReadPrimitive<uint>(stream);
+                break;
+
+            case NodeType.ULong:
+                TokenType = SsbfTokenType.ULong;
+                currentValue = ReadPrimitive<ulong>(stream);
+                break;
+
+            case NodeType.HalfFloat:
+                TokenType = SsbfTokenType.HalfFloat;
+                currentValue = ReadPrimitive<Half>(stream);
+                break;
+
+            case NodeType.Single:
+                TokenType = SsbfTokenType.Single;
+                currentValue = ReadPrimitive<float>(stream);
+                break;
+
+            case NodeType.Double:
+                TokenType = SsbfTokenType.Double;
+                currentValue = ReadPrimitive<double>(stream);
+                break;
+
+            case NodeType.String:
+                TokenType = SsbfTokenType.String;
+                currentValue = ReadStringPayload(stream);
+                break;
+
+            case NodeType.ByteArray:
+                TokenType = SsbfTokenType.ByteArray;
+                var length = ReadPrimitive<int>(stream);
+                var data = new byte[length];
+                stream.ReadExactly(data);
+                currentValue = data;
+                break;
+
+            default:
+                throw new InvalidDataException($"Unknown node type byte: 0x{nodeType:X2}");
+        }
+
+        // Stop after root value fully consumed
+        if (scopes.Count == 0 && TokenType != SsbfTokenType.None)
+        {
+            NotifyParentScopeValueConsumed(); // no-op at root, but consistent
+            return true;
+        }
+
+        NotifyParentScopeValueConsumed();
+        return true;
+    }
+
+    // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
@@ -338,15 +352,10 @@ public class SsbfReader : IDisposable
             compressionStream = new BrotliStream(rootStream, CompressionMode.Decompress, leaveOpen: true);
     }
 
-    /// <summary>
-    /// After writing a scalar (or EndObject/EndArray), notify the enclosing object scope
-    /// that it should now expect the next property name.
-    /// </summary>
     private void NotifyParentScopeValueConsumed()
     {
         if (scopes.Count == 0)
             return;
-
         var parent = scopes.Peek();
         if (parent.IsObject)
             parent.ExpectingPropertyName = true;
@@ -368,45 +377,17 @@ public class SsbfReader : IDisposable
     private void ThrowIfDisposed()
         => ObjectDisposedException.ThrowIf(disposed, this);
 
-    // --- byte-level I/O ---
+    // -------------------------------------------------------------------------
+    // Byte-level I/O — no look-ahead needed anywhere under the new spec
+    // -------------------------------------------------------------------------
 
-    /// <summary>
-    /// Reads one byte, draining the look-ahead buffer first if populated.
-    /// </summary>
-    private byte ConsumeByte(Stream stream)
+    private static byte ReadByte(Stream stream)
     {
-        if (hasPeeked)
-        {
-            hasPeeked = false;
-            if (peekedByte == -1)
-                throw new EndOfStreamException("Unexpected end of stream");
-            return (byte)peekedByte;
-        }
-
         var b = stream.ReadByte();
         if (b == -1)
             throw new EndOfStreamException("Unexpected end of stream");
         return (byte)b;
     }
-
-    /// <summary>
-    /// Returns the next byte without consuming it. Only used on non-compressed streams
-    /// or on streams where we maintain our own buffer; for <see cref="BrotliStream"/> we
-    /// rely on a small look-ahead buffer.
-    /// </summary>
-    private int PeekByte(Stream stream)
-    {
-        // BrotliStream doesn't support seeking, so we maintain a 1-byte look-ahead.
-        if (hasPeeked)
-            return peekedByte;
-
-        peekedByte = stream.ReadByte();
-        hasPeeked = true;
-        return peekedByte;
-    }
-
-    private bool hasPeeked;
-    private int peekedByte;
 
     private static T ReadPrimitive<T>(Stream stream) where T : unmanaged
     {
@@ -417,50 +398,10 @@ public class SsbfReader : IDisposable
 
     private static string ReadStringPayload(Stream stream)
     {
-        // Read until null terminator, growing a rented buffer as needed.
         var rented = ArrayPool<byte>.Shared.Rent(64);
         var pos = 0;
         try
         {
-            while (true)
-            {
-                var b = stream.ReadByte();
-                if (b == -1)
-                    throw new EndOfStreamException("Unexpected end of stream inside string");
-                if (b == 0x00)
-                    break;
-
-                if (pos == rented.Length)
-                {
-                    var grown = ArrayPool<byte>.Shared.Rent(rented.Length * 2);
-                    rented.AsSpan(0, pos).CopyTo(grown);
-                    ArrayPool<byte>.Shared.Return(rented);
-                    rented = grown;
-                }
-
-                rented[pos++] = (byte)b;
-            }
-
-            return Encoding.UTF8.GetString(rented, 0, pos);
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(rented);
-        }
-    }
-
-    /// <summary>
-    /// Reads a null-terminated string from <paramref name="stream"/> where the first byte
-    /// has already been consumed and is passed in as <paramref name="firstByte"/>.
-    /// </summary>
-    private static string ReadStringPayloadWithFirstByte(Stream stream, byte firstByte)
-    {
-        var rented = ArrayPool<byte>.Shared.Rent(64);
-        var pos = 0;
-        try
-        {
-            rented[pos++] = firstByte;
-
             while (true)
             {
                 var b = stream.ReadByte();

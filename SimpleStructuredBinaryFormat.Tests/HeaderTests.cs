@@ -31,7 +31,7 @@ public class HeaderTests
     {
         var ms = new MemoryStream([]);
         using var reader = new SsbfReader(ms);
-        Assert.Throws<Exception>(() => reader.Read()); // EndOfStreamException
+        Assert.Throws<EndOfStreamException>(() => reader.Read());
     }
 
     [Fact]

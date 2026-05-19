@@ -2,7 +2,7 @@ namespace SimpleStructuredBinaryFormat;
 
 public enum NodeType : byte
 {
-    Reserved = 0,
+    End = 0,
     Null = 1,
     Object = 2,
     Array = 3,
