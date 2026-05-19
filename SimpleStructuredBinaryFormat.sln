@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# 
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleStructuredBinaryFormat", "SimpleStructuredBinaryFormat\SimpleStructuredBinaryFormat.csproj", "{7BECDB24-BD94-403A-A503-A745F35D6EBF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleStructuredBinaryFormat.Tests", "SimpleStructuredBinaryFormat.Tests\SimpleStructuredBinaryFormat.Tests.csproj", "{429AF615-2ECC-4E5B-939F-B77674A09B40}"
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleStructuredBinaryFormat.Binding.Generator", "SimpleStructuredBinaryFormat.Binding.Generator\SimpleStructuredBinaryFormat.Binding.Generator.csproj", "{59BFC898-B36A-494A-B36D-7E5E9C92DB68}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleStructuredBinaryFormat.Binding.Tests", "SimpleStructuredBinaryFormat.Binding.Tests\SimpleStructuredBinaryFormat.Binding.Tests.csproj", "{D3FE538A-AEEE-4D4C-B5D6-F396D2CA6BAB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SimpleStructuredBinaryFormat.Pack", "SimpleStructuredBinaryFormat.Pack\SimpleStructuredBinaryFormat.Pack.csproj", "{B08A863D-D78B-48D1-B351-A994EC6B5640}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,5 +39,9 @@ Global
 		{D3FE538A-AEEE-4D4C-B5D6-F396D2CA6BAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3FE538A-AEEE-4D4C-B5D6-F396D2CA6BAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3FE538A-AEEE-4D4C-B5D6-F396D2CA6BAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B08A863D-D78B-48D1-B351-A994EC6B5640}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B08A863D-D78B-48D1-B351-A994EC6B5640}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B08A863D-D78B-48D1-B351-A994EC6B5640}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B08A863D-D78B-48D1-B351-A994EC6B5640}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

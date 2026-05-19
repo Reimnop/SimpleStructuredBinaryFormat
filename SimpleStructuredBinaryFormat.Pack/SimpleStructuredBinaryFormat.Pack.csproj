@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <Version>3.0.0</Version>
+    <Title>SimpleStructuredBinaryFormat</Title>
+    <Description>Simple Structured Binary Format is a simple, efficient, structured binary data format. It mimics JSON, with additional types and compression support.</Description>
+    <Copyright>Copyright (c) 2026 Reimnop</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Reimnop/SimpleStructuredBinaryFormat</RepositoryUrl>
+    <PackageTags>ssbf json structure structured binary format</PackageTags>
+    <Authors>Reimnop</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>SimpleStructuredBinaryFormat</PackageId>
+    
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>$(NoWarn);NU5128</NoWarn> <!-- suppress "no lib files" warning -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath=""/>
+    <None Include="../LICENSE" Pack="true" PackagePath=""/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../SimpleStructuredBinaryFormat.Binding.Generator/SimpleStructuredBinaryFormat.Binding.Generator.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <SetTargetFramework>TargetFramework=netstandard2.0</SetTargetFramework>
+    </ProjectReference>
+    
+    <ProjectReference Include="../SimpleStructuredBinaryFormat/SimpleStructuredBinaryFormat.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+
+    <ProjectReference Include="../SimpleStructuredBinaryFormat.Binding/SimpleStructuredBinaryFormat.Binding.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <PrivateAssets>all</PrivateAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Target Name="AddAssembliesToPackage" AfterTargets="_GetPackageFiles">
+    <ItemGroup>
+      <_PackageFiles Include="../SimpleStructuredBinaryFormat/bin/$(Configuration)/net8.0/SimpleStructuredBinaryFormat.dll"
+                     PackagePath="lib/net8.0/SimpleStructuredBinaryFormat.dll" />
+      <_PackageFiles Include="../SimpleStructuredBinaryFormat/bin/$(Configuration)/net8.0/SimpleStructuredBinaryFormat.xml"
+                     PackagePath="lib/net8.0/SimpleStructuredBinaryFormat.xml" />
+      <_PackageFiles Include="../SimpleStructuredBinaryFormat.Binding/bin/$(Configuration)/net8.0/SimpleStructuredBinaryFormat.Binding.dll"
+                     PackagePath="lib/net8.0/SimpleStructuredBinaryFormat.Binding.dll" />
+      <_PackageFiles Include="../SimpleStructuredBinaryFormat.Binding/bin/$(Configuration)/net8.0/SimpleStructuredBinaryFormat.Binding.xml"
+                     PackagePath="lib/net8.0/SimpleStructuredBinaryFormat.Binding.xml" />
+      <_PackageFiles Include="../SimpleStructuredBinaryFormat.Binding.Generator/bin/$(Configuration)/netstandard2.0/SimpleStructuredBinaryFormat.Binding.Generator.dll"
+                     PackagePath="analyzers/dotnet/cs/SimpleStructuredBinaryFormat.Binding.Generator.dll" />
+    </ItemGroup>
+  </Target>
+
+</Project>
