@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using BrotliStream = BrotliSharpLib.BrotliStream;
 
 namespace SimpleStructuredBinaryFormat;
 

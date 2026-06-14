@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using BrotliStream = BrotliSharpLib.BrotliStream;
 
 namespace SimpleStructuredBinaryFormat;
 
@@ -376,10 +377,6 @@ public class SsbfReader : IDisposable
 
     private void ThrowIfDisposed()
         => ObjectDisposedException.ThrowIf(disposed, this);
-
-    // -------------------------------------------------------------------------
-    // Byte-level I/O — no look-ahead needed anywhere under the new spec
-    // -------------------------------------------------------------------------
 
     private static byte ReadByte(Stream stream)
     {
