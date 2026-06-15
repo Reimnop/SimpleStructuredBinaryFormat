@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
-    <Version>3.0.4</Version>
+    <Version>3.0.5</Version>
     <Title>SimpleStructuredBinaryFormat</Title>
     <Description>Simple Structured Binary Format is a simple, efficient, structured binary data format. It mimics JSON, with additional types and compression support.</Description>
     <Copyright>Copyright (c) 2026 Reimnop</Copyright>
