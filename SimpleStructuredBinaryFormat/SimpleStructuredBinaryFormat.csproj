@@ -12,8 +12,4 @@
     <None Include="../SPECS.md" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BrotliSharpLib" Version="0.3.3" />
-  </ItemGroup>
-
 </Project>
