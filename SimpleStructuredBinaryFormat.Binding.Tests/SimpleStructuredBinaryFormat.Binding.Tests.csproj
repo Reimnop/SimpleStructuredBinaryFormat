@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../SimpleStructuredBinaryFormat/SimpleStructuredBinaryFormat.csproj" />
-    <ProjectReference Include="../SimpleStructuredBinaryFormat.Binding/SimpleStructuredBinaryFormat.Binding.csproj" />
     <ProjectReference Include="../SimpleStructuredBinaryFormat.Binding.Generator/SimpleStructuredBinaryFormat.Binding.Generator.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />

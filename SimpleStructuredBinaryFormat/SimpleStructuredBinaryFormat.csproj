@@ -4,12 +4,36 @@
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyVersion>3.0.5</AssemblyVersion>
+    <AssemblyVersion>3.1.0</AssemblyVersion>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Version>3.1.0</Version>
+    <Title>SimpleStructuredBinaryFormat</Title>
+    <Description>Simple Structured Binary Format is a simple, efficient, structured binary data format. It mimics JSON, with additional types and compression support.</Description>
+    <Copyright>Copyright (c) 2026 Reimnop</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/Reimnop/SimpleStructuredBinaryFormat</RepositoryUrl>
+    <PackageTags>ssbf json structure structured binary format</PackageTags>
+    <Authors>Reimnop</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageId>SimpleStructuredBinaryFormat</PackageId>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="../SimpleStructuredBinaryFormat.Binding.Generator/SimpleStructuredBinaryFormat.Binding.Generator.csproj"
+                      ReferenceOutputAssembly="false"
+                      OutputItemType="Analyzer" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="../SPECS.md" />
+    <None Include="../README.md"
+          Pack="true"
+          PackagePath="/" />
+    <None Include="../SimpleStructuredBinaryFormat.Binding.Generator/bin/$(Configuration)/netstandard2.0/SimpleStructuredBinaryFormat.Binding.Generator.dll"
+          Pack="true"
+          PackagePath="analyzers/dotnet/cs"
+          Visible="false" />
   </ItemGroup>
 
 </Project>
